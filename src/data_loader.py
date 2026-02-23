@@ -8,6 +8,12 @@ handling missing values, and returning a ready-to-use DataFrame.
 
 import os
 import pandas as pd
+from typing import Optional
+
+try:
+    from src.download_latest_tcs_data import download_tcs_data, save_to_csv
+except ImportError:
+    from download_latest_tcs_data import download_tcs_data, save_to_csv
 
 
 # ──────────────────────────────────────────────────
@@ -18,13 +24,38 @@ import pandas as pd
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DATA_DIR = os.path.join(PROJECT_ROOT, "data")
 HISTORICAL_CSV = os.path.join(DATA_DIR, "TCS_stock_history.csv")
+LATEST_CSV = os.path.join(DATA_DIR, "tcs_stock_latest.csv")
+
+
+def ensure_latest_data(
+    filepath: str = LATEST_CSV,
+    period: str = "5y",
+    interval: str = "1d",
+) -> str:
+    """
+    Ensure a local latest CSV exists. If not, download from Yahoo Finance.
+
+    Returns
+    -------
+    str
+        Path to the CSV that should be used for loading.
+    """
+    os.makedirs(DATA_DIR, exist_ok=True)
+
+    if os.path.exists(filepath):
+        return filepath
+
+    print("[data_loader] Latest CSV not found. Downloading online data...")
+    downloaded_df = download_tcs_data(period=period, interval=interval)
+    save_to_csv(downloaded_df, filepath=filepath)
+    return filepath
 
 
 # ──────────────────────────────────────────────────
 # Core Loader Function
 # ──────────────────────────────────────────────────
 
-def load_tcs_data(filepath: str = HISTORICAL_CSV) -> pd.DataFrame:
+def load_tcs_data(filepath: Optional[str] = None) -> pd.DataFrame:
     """
     Load TCS stock history from a CSV file and return a clean DataFrame.
 
@@ -38,21 +69,32 @@ def load_tcs_data(filepath: str = HISTORICAL_CSV) -> pd.DataFrame:
 
     Parameters
     ----------
-    filepath : str
-        Path to the CSV file. Defaults to data/TCS_stock_history.csv.
+    filepath : Optional[str]
+        Path to a CSV file. If None, loader prefers data/tcs_stock_latest.csv.
+        If that file is missing, it auto-downloads data from Yahoo Finance.
 
     Returns
     -------
     pd.DataFrame
         Cleaned DataFrame with proper types and no leading NaN gaps.
     """
-    # --- 1. Read CSV ---
+    # --- 1. Resolve CSV source (prefer latest CSV, fallback to historical CSV) ---
+    if filepath is None:
+        if os.path.exists(LATEST_CSV):
+            filepath = LATEST_CSV
+        elif os.path.exists(HISTORICAL_CSV):
+            filepath = HISTORICAL_CSV
+        else:
+            filepath = ensure_latest_data()
+
     if not os.path.exists(filepath):
-        raise FileNotFoundError(
-            f"[data_loader] File not found: {filepath}\n"
-            "Please place 'TCS_stock_history.csv' in the data/ folder, "
-            "or run src/download_latest_tcs_data.py to fetch live data."
-        )
+        if filepath == LATEST_CSV:
+            filepath = ensure_latest_data(filepath=LATEST_CSV)
+        else:
+            raise FileNotFoundError(
+                f"[data_loader] File not found: {filepath}\n"
+                "Provide a valid CSV path or allow auto-download by using load_tcs_data() with no filepath."
+            )
 
     df = pd.read_csv(filepath)
     print(f"[data_loader] Loaded {len(df)} rows from '{filepath}'")
@@ -76,7 +118,7 @@ def load_tcs_data(filepath: str = HISTORICAL_CSV) -> pd.DataFrame:
             df[col] = pd.to_numeric(df[col], errors="coerce")
 
     # --- 5. Handle missing values using forward fill then backward fill ---
-    df = df.fillna(method="ffill").fillna(method="bfill")
+    df = df.ffill().bfill()
 
     # --- 6. Final reset of index ---
     df = df.reset_index(drop=True)

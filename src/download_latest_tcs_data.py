@@ -16,6 +16,7 @@ Requirements:
 
 import os
 import sys
+import argparse
 import pandas as pd
 
 # ── Resolve the project root path ──────────────────────────────────────────────
@@ -52,26 +53,37 @@ def download_tcs_data(period: str = "5y", interval: str = "1d") -> pd.DataFrame:
     print(f"             Period   : {period}")
     print(f"             Interval : {interval}")
 
-    # Create a Ticker object
+    # Download OHLCV + corporate actions in one DataFrame
+    # Ticker.history gives flat columns (better than multi-index from yf.download)
     ticker = yf.Ticker(ticker_symbol)
-
-    # Download OHLCV + Actions (dividends & splits) as one DataFrame
-    df = ticker.history(period=period, interval=interval, auto_adjust=True)
+    df = ticker.history(
+        period=period,
+        interval=interval,
+        auto_adjust=True,
+        actions=True,
+    )
 
     if df.empty:
         print("[downloader] ERROR: No data returned. Please check your internet connection.")
         sys.exit(1)
 
-    # Reset index so 'Date' becomes a regular column (not the DataFrame index)
+    # Reset index so Date/Datetime becomes a regular column
     df = df.reset_index()
 
-    # Ensure the Date column is timezone-naive (remove tz info if present)
-    # This avoids issues when saving to CSV and reloading.
-    if hasattr(df["Date"].dtype, "tz") and df["Date"].dt.tz is not None:
-        df["Date"] = df["Date"].dt.tz_localize(None)
+    # Normalize datetime column name to 'Date'
+    if "Datetime" in df.columns and "Date" not in df.columns:
+        df = df.rename(columns={"Datetime": "Date"})
 
-    # Rename columns consistently (yfinance occasionally returns 'Datetime' instead of 'Date')
-    df = df.rename(columns={"Datetime": "Date"})
+    if "Date" not in df.columns:
+        raise ValueError("[downloader] Could not find a Date column after download.")
+
+    # Ensure timezone-naive datetime to avoid serialization issues
+    df["Date"] = pd.to_datetime(df["Date"], errors="coerce")
+    try:
+        df["Date"] = df["Date"].dt.tz_localize(None)
+    except TypeError:
+        # already tz-naive
+        pass
 
     # Reorder columns to match TCS_stock_history.csv structure
     expected_cols = ["Date", "Open", "High", "Low", "Close", "Volume", "Dividends", "Stock Splits"]
@@ -109,15 +121,22 @@ def main():
     print("  Ticker: TCS.NS  |  Exchange: NSE India (via Yahoo Finance)")
     print("=" * 60)
 
+    parser = argparse.ArgumentParser(description="Download latest TCS stock data from Yahoo Finance.")
+    parser.add_argument("--period", default="5y", help="Download window (e.g. 1y, 2y, 5y, max)")
+    parser.add_argument("--interval", default="1d", help="Data interval (e.g. 1d, 1wk, 1mo)")
+    parser.add_argument("--output", default=OUTPUT_FILE, help="Output CSV path")
+    args = parser.parse_args()
+
     # Download data
-    df = download_tcs_data(period="5y", interval="1d")
+    df = download_tcs_data(period=args.period, interval=args.interval)
 
     # Preview a few rows in the terminal
-    print("\n[downloader] Sample rows (last 5):")
-    print(df.tail().to_string(index=False))
+    print("\n[downloader] DataFrame shape:", df.shape)
+    print("\n[downloader] Head (first 5 rows):")
+    print(df.head().to_string(index=False))
 
     # Save to CSV
-    save_to_csv(df)
+    save_to_csv(df, filepath=args.output)
 
     print("\n[downloader] Done! You can now use 'data/tcs_stock_latest.csv' as your dataset.")
     print("             Rename it to 'TCS_stock_history.csv' to use with the notebooks.")

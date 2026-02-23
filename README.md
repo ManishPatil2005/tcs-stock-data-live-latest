@@ -15,6 +15,7 @@ This project analyses the historical stock price data of **TCS (NSE: TCS)**, one
 
 **What this project does:**
 - Loads and cleans historical TCS stock data from a CSV file
+- Auto-fetches latest TCS stock data from Yahoo Finance when local data is missing
 - Performs detailed **Exploratory Data Analysis (EDA)** with visualisations
 - Engineers time-based and lag features for ML modeling
 - Trains and evaluates three models: **Linear Regression**, **Random Forest**, and an optional **LSTM**
@@ -69,6 +70,22 @@ tcs-stock-data-live-latest/
 
 ---
 
+## High-Level Flow
+
+1. **Data Ingestion**
+	- `src/data_loader.py` prefers `data/tcs_stock_latest.csv`.
+	- If missing, it auto-calls the online downloader and creates the CSV.
+2. **EDA**
+	- `notebooks/01_eda_tcs_stock.ipynb` explores trends, volume, correlation, and moving averages.
+3. **Feature Engineering**
+	- `src/features.py` adds lag, date, rolling-average, and volatility features.
+4. **Modeling**
+	- `notebooks/02_ml_model_tcs_stock.ipynb` runs Linear Regression, Random Forest, and optional LSTM.
+
+This makes the project easy to understand for internship showcase and easy to extend for future experiments.
+
+---
+
 ## Quickstart — Setup Instructions
 
 ### Prerequisites
@@ -109,8 +126,10 @@ pip install -r requirements.txt
 python src/download_latest_tcs_data.py
 ```
 
-This will save `data/tcs_stock_latest.csv`. Rename it to `TCS_stock_history.csv`
-or update the path in `src/data_loader.py`.
+This saves `data/tcs_stock_latest.csv`.
+
+> You can also skip this step.
+> If no CSV is found, `load_tcs_data()` will auto-download online data.
 
 ### Step 5: Launch Jupyter Notebook
 
@@ -119,6 +138,33 @@ jupyter notebook
 ```
 
 Open `notebooks/01_eda_tcs_stock.ipynb` for EDA, then `notebooks/02_ml_model_tcs_stock.ipynb` for models.
+
+---
+
+## Run in GitHub Codespaces / Dev Containers
+
+This repo includes `.devcontainer/devcontainer.json` so contributors can run it without manual system setup.
+
+### GitHub Codespaces
+
+1. Open the repository on GitHub.
+2. Click **Code** → **Codespaces** → **Create codespace on main**.
+3. Wait for environment build (dependencies install automatically from `requirements.txt`).
+4. Run:
+
+```bash
+python src/download_latest_tcs_data.py
+jupyter notebook
+```
+
+### VS Code Dev Containers (local Docker)
+
+1. Install Docker Desktop + VS Code extension **Dev Containers**.
+2. Open repo in VS Code.
+3. Run command: **Dev Containers: Reopen in Container**.
+4. Environment starts with Python + required packages.
+
+This gives reproducible behavior across local machines and cloud workspaces.
 
 ---
 

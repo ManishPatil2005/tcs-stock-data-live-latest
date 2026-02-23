@@ -32,7 +32,9 @@ dist/
 # data/*.csv
 
 # ── VS Code settings ──────────────────────────────────
-.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
 *.code-workspace
 
 # ── macOS / Windows system files ─────────────────────
