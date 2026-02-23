@@ -6,6 +6,7 @@
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/Status-Complete-brightgreen)]()
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ManishPatil2005/tcs-stock-data-live-latest/blob/main/notebooks/03_tcs_stock_one_click_colab.ipynb)
 
 ---
 
@@ -138,6 +139,25 @@ jupyter notebook
 ```
 
 Open `notebooks/01_eda_tcs_stock.ipynb` for EDA, then `notebooks/02_ml_model_tcs_stock.ipynb` for models.
+
+---
+
+## One-Click Colab (Single File)
+
+Use this notebook if you want the full project flow in one place on any device:
+
+- `notebooks/03_tcs_stock_one_click_colab.ipynb`
+
+Direct link:
+
+`https://colab.research.google.com/github/ManishPatil2005/tcs-stock-data-live-latest/blob/main/notebooks/03_tcs_stock_one_click_colab.ipynb`
+
+It automatically:
+- clones the repo,
+- installs requirements,
+- downloads latest TCS data,
+- runs EDA,
+- runs baseline ML models.
 
 ---
 
