@@ -227,6 +227,23 @@ def plot_moving_averages(df: pd.DataFrame, short_window: int = 5, long_window: i
     print(f"[eda] Total Buy  signals: {len(buy_dates)}")
     print(f"[eda] Total Sell signals: {len(sell_dates)}")
 
+    # Clear end-of-analysis guidance for the latest day
+    latest_row = df.iloc[-1]
+    latest_signal = int(latest_row["Signal"])
+    latest_position = latest_row["Position"]
+
+    if latest_signal == 1:
+        print("[eda] Current trend bias: BUY (short MA is above long MA)")
+    else:
+        print("[eda] Current trend bias: SELL (short MA is below long MA)")
+
+    if pd.isna(latest_position) or latest_position == 0:
+        print("[eda] Latest event: No new crossover today → HOLD previous bias")
+    elif latest_position == 1:
+        print("[eda] Latest event: NEW BUY crossover today")
+    elif latest_position == -1:
+        print("[eda] Latest event: NEW SELL crossover today")
+
 
 # ──────────────────────────────────────────────────
 # 7. Price Distribution (Histogram)
