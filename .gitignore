@@ -1,0 +1,60 @@
+# ─────────────────────────────────────────────────────
+# .gitignore  |  TCS Stock Data – Live and Latest
+# ─────────────────────────────────────────────────────
+
+# ── Python ────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# ── Virtual environments ──────────────────────────────
+venv/
+env/
+.venv/
+.env/
+ENV/
+
+# ── Distribution / Packaging ──────────────────────────
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+
+# ── Jupyter Notebook checkpoints ─────────────────────
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/
+
+# ── Data files (large CSVs — do not push to GitHub) ──
+# Uncomment the line below if you want to exclude data CSVs
+# data/*.csv
+
+# ── VS Code settings ──────────────────────────────────
+.vscode/
+*.code-workspace
+
+# ── macOS / Windows system files ─────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Pytest / Test cache ───────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ── Environment variable files (keep secrets safe) ────
+.env
+*.env
+
+# ── TensorFlow checkpoints and saved models ───────────
+*.h5
+*.keras
+saved_model/
+checkpoints/
+
+# ── Logs ─────────────────────────────────────────────
+*.log
+logs/
